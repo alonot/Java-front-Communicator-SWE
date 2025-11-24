@@ -1,6 +1,7 @@
 /**
  *  Contributed by Sandeep Kumar.
  */
+
 package com.swe.ux.viewmodel;
 
 import com.swe.controller.RPCinterface.AbstractRPC;
@@ -16,65 +17,102 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
+/**
+ * ViewModel for managing the screen and video data logic.
+ * Handles RPC subscriptions and participant visibility tracking.
+ */
 public class ScreenNVideoModel extends BaseViewModel {
 
+    /**
+     * Callback invoked when a new video frame is received.
+     */
     private Consumer<UIImage> onImageReceived;
 
-    private AbstractRPC rpc;
+    /**
+     * RPC interface for network communication.
+     */
+    private final AbstractRPC rpc;
 
-    private static ScreenNVideoModel INSTANCE;
+    /**
+     * Singleton instance of the model.
+     */
+    private static ScreenNVideoModel instance;
 
-    // Property to track visible participants (IPs)
-    public final BindableProperty<Set<String>> visibleParticipants = new BindableProperty<>(new HashSet<>(), "visibleParticipants");
-    public static ScreenNVideoModel getInstance(AbstractRPC rpc) {
-        if (INSTANCE == null) {
-            INSTANCE = new ScreenNVideoModel(rpc);
+    /**
+     * Value for successful image processing.
+     */
+    private static final byte BYTE_SUCCESS = 1;
+
+    /**
+     * Property to track visible participants (IPs).
+     */
+    public final BindableProperty<Set<String>> visibleParticipants = new BindableProperty<>(
+            new HashSet<>(), "visibleParticipants"
+    );
+
+    /**
+     * Gets the singleton instance of the model.
+     * @param rpc The RPC interface to use if creating a new instance.
+     * @return The ScreenNVideoModel instance.
+     */
+    public static ScreenNVideoModel getInstance(final AbstractRPC rpc) {
+        if (instance == null) {
+            instance = new ScreenNVideoModel(rpc);
         }
-        return INSTANCE;
+        return instance;
     }
-    
-    private ScreenNVideoModel(AbstractRPC rpc) {
-        this.rpc = rpc;
+
+    private ScreenNVideoModel(final AbstractRPC rpcArg) {
+        this.rpc = rpcArg;
         
         initComponents();
     }
 
-    public void setOnImageReceived(Consumer<UIImage> onImageReceived) {
-        this.onImageReceived = onImageReceived;
+    /**
+     * Sets the callback for receiving image frames.
+     * @param onImageReceivedArg The consumer to accept new UIImages.
+     */
+    public void setOnImageReceived(final Consumer<UIImage> onImageReceivedArg) {
+        this.onImageReceived = onImageReceivedArg;
     }
 
     public void requestUncompressedData(final String ip) {
-        SubscriberPacket subscriberPacket = new SubscriberPacket(ip, false);
+        final SubscriberPacket subscriberPacket = new SubscriberPacket(ip, false);
         rpc.call(Utils.SUBSCRIBE_AS_VIEWER, subscriberPacket.serialize());
     }
 
     public void requestCompressedData(final String ip) {
-        SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
+        final SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
         rpc.call(Utils.SUBSCRIBE_AS_VIEWER, subscriberPacket.serialize());
     }
 
     /**
      * Updates the list of currently visible participants.
      * Called by the View when layout or scroll changes.
+     * @param visibleEmails Set of visible email IDs/IPs.
      */
-    public void updateVisibleParticipants(Set<String> visibleEmails) {
+    public void updateVisibleParticipants(final Set<String> visibleEmails) {
         System.out.println("Participants " + Arrays.toString(visibleEmails.toArray()));
         // get new ips
         for (String emails : visibleEmails) {
             if (!visibleParticipants.get().contains(emails)) {
-                SubscriberPacket subscriberPacket = new SubscriberPacket(emails, true);
+                final SubscriberPacket subscriberPacket = new SubscriberPacket(emails, true);
                 try {
                     rpc.call(Utils.SUBSCRIBE_AS_VIEWER, subscriberPacket.serialize());
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+
+                }
             }
         }
         // get ips to remove
         for (String ip : visibleParticipants.get()) {
             if (!visibleEmails.contains(ip)) {
-                SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
+                final SubscriberPacket subscriberPacket = new SubscriberPacket(ip, true);
                 try {
                     rpc.call(Utils.UNSUBSCRIBE_AS_VIEWER, subscriberPacket.serialize());
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+
+                }
             }
         }
         visibleParticipants.set(visibleEmails);
@@ -84,19 +122,19 @@ public class ScreenNVideoModel extends BaseViewModel {
         rpc.subscribe(Utils.UPDATE_UI, (args) -> {
             final RImage rImage = RImage.deserialize(args);
             final int[][] image = rImage.getImage();
-            int height = image.length;
-            int width = image[0].length;
+            final int height = image.length;
+            final int width = image[0].length;
 
-            BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            final BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
             for (int x = 0; x < height; x++) {
                 for (int y = 0; y < width; y++) {
                     bufferedImage.setRGB(y, x, image[x][y]);
                 }
             }
-            UIImage uiImage = new UIImage(bufferedImage, rImage.getIp(), (byte) 1);
+            final UIImage uiImage = new UIImage(bufferedImage, rImage.getIp(), (byte) 1);
             onImageReceived.accept(uiImage);
-            byte[] res = new byte[1];
+            final byte[] res = new byte[1];
             res[0] = uiImage.isSuccess();
             return res;
         });

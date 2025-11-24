@@ -1,6 +1,7 @@
 /**
  *  Contributed by Sandeep Kumar.
  */
+
 package com.swe.ux.view;
 
 import com.swe.controller.Meeting.UserProfile;
@@ -9,9 +10,18 @@ import com.swe.ux.theme.Theme;
 import com.swe.ux.theme.ThemeManager;
 import com.swe.ux.viewmodel.ParticipantsViewModel;
 
-import javax.swing.*;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.util.List;
 
 /**
@@ -19,17 +29,91 @@ import java.util.List;
  * Shows participant count and list of participant names.
  */
 public class ParticipantsView extends JPanel {
+    /**
+     * ViewModel containing the participant data.
+     */
     private final ParticipantsViewModel viewModel;
+
+    /**
+     * Label to display the count of participants.
+     */
     private JLabel countLabel;
+
+    /**
+     * Panel container for the list of participants.
+     */
     private JPanel participantsListPanel;
+
+    /**
+     * ScrollPane for the participant list.
+     */
     private JScrollPane scrollPane;
+
+    // UI Constants
+
+    /**
+     * Standard gap size.
+     */
+    private static final int GAP = 10;
+
+    /**
+     * Standard padding size.
+     */
+    private static final int PADDING = 10;
+
+    /**
+     * Standard internal padding for participant item borders.
+     */
+    private static final int ITEM_BORDER_PADDING = 5;
+
+    /**
+     * Font size for the header label.
+     */
+    private static final int HEADER_FONT_SIZE = 16;
+
+    /**
+     * Font size for list items.
+     */
+    private static final int LIST_ITEM_FONT_SIZE = 14;
+
+    /**
+     * Height of a single participant item.
+     */
+    private static final int LIST_ITEM_HEIGHT = 50;
+
+    /**
+     * Size of the online status indicator.
+     */
+    private static final int ONLINE_INDICATOR_SIZE = 10;
+
+    /**
+     * Spacing between list items.
+     */
+    private static final int LIST_ITEM_SPACING = 8;
+
+    // Colors
+
+    /**
+     * Red component for Green color.
+     */
+    private static final int GREEN_R = 76;
+
+    /**
+     * Green component for Green color.
+     */
+    private static final int GREEN_G = 175;
+
+    /**
+     * Blue component for Green color.
+     */
+    private static final int GREEN_B = 80;
     
     /**
      * Creates a new ParticipantsView.
-     * @param viewModel The ParticipantsViewModel to use
+     * @param viewModelArg The ParticipantsViewModel to use
      */
-    public ParticipantsView(ParticipantsViewModel viewModel) {
-        this.viewModel = viewModel;
+    public ParticipantsView(final ParticipantsViewModel viewModelArg) {
+        this.viewModel = viewModelArg;
         initializeUI();
         setupBindings();
         applyTheme();
@@ -39,20 +123,20 @@ public class ParticipantsView extends JPanel {
      * Initializes the UI components.
      */
     private void initializeUI() {
-        setLayout(new BorderLayout(10, 10));
-        setBorder(new EmptyBorder(10, 10, 10, 10));
+        setLayout(new BorderLayout(GAP, GAP));
+        setBorder(new EmptyBorder(PADDING, PADDING, PADDING, PADDING));
         
         // Header with participant count
-        JPanel headerPanel = new JPanel(new BorderLayout());
+        final JPanel headerPanel = new JPanel(new BorderLayout());
         countLabel = new JLabel("Participants (0)", JLabel.LEFT);
-        countLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        countLabel.setFont(new Font("Segoe UI", Font.BOLD, HEADER_FONT_SIZE));
         headerPanel.add(countLabel, BorderLayout.WEST);
         add(headerPanel, BorderLayout.NORTH);
         
         // Participants list
         participantsListPanel = new JPanel();
         participantsListPanel.setLayout(new BoxLayout(participantsListPanel, BoxLayout.Y_AXIS));
-        participantsListPanel.setBorder(new EmptyBorder(10, 0, 0, 0));
+        participantsListPanel.setBorder(new EmptyBorder(PADDING, 0, 0, 0));
         
         scrollPane = new JScrollPane(participantsListPanel);
         scrollPane.setBorder(null);
@@ -69,7 +153,7 @@ public class ParticipantsView extends JPanel {
         // Listen to participant count changes
         viewModel.participantCount.addListener(evt -> {
             SwingUtilities.invokeLater(() -> {
-                int count = viewModel.participantCount.get();
+                final int count = viewModel.participantCount.get();
                 countLabel.setText("Participants (" + count + ")");
             });
         });
@@ -83,7 +167,7 @@ public class ParticipantsView extends JPanel {
         
         // Initial update
         SwingUtilities.invokeLater(() -> {
-            int count = viewModel.participantCount.get();
+            final int count = viewModel.participantCount.get();
             countLabel.setText("Participants (" + count + ")");
             updateParticipantsList(viewModel.getParticipants());
         });
@@ -93,19 +177,19 @@ public class ParticipantsView extends JPanel {
      * Updates the participants list display.
      * @param participants The list of participants to display
      */
-    private void updateParticipantsList(List<UserProfile> participants) {
+    private void updateParticipantsList(final List<UserProfile> participants) {
         participantsListPanel.removeAll();
         
         if (participants == null || participants.isEmpty()) {
-            JLabel emptyLabel = new JLabel("No participants", JLabel.CENTER);
-            emptyLabel.setFont(new Font("Segoe UI", Font.ITALIC, 14));
+            final JLabel emptyLabel = new JLabel("No participants", JLabel.CENTER);
+            emptyLabel.setFont(new Font("Segoe UI", Font.ITALIC, LIST_ITEM_FONT_SIZE));
             emptyLabel.setForeground(Color.GRAY);
             participantsListPanel.add(emptyLabel);
         } else {
             for (UserProfile participant : participants) {
-                JPanel participantItem = createParticipantItem(participant);
+                final JPanel participantItem = createParticipantItem(participant);
                 participantsListPanel.add(participantItem);
-                participantsListPanel.add(Box.createVerticalStrut(8));
+                participantsListPanel.add(Box.createVerticalStrut(LIST_ITEM_SPACING));
             }
         }
         
@@ -118,23 +202,30 @@ public class ParticipantsView extends JPanel {
      * @param participant The participant user
      * @return A JPanel displaying the participant information
      */
-    private JPanel createParticipantItem(UserProfile participant) {
-        JPanel itemPanel = new JPanel(new BorderLayout(10, 5));
-        itemPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        itemPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+    private JPanel createParticipantItem(final UserProfile participant) {
+        final JPanel itemPanel = new JPanel(new BorderLayout(GAP, 5));
+        itemPanel.setBorder(new EmptyBorder(
+                ITEM_BORDER_PADDING, ITEM_BORDER_PADDING, ITEM_BORDER_PADDING, ITEM_BORDER_PADDING
+        ));
+        itemPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, LIST_ITEM_HEIGHT));
         
         // Participant name
-        String displayName = participant.getDisplayName();
-        String name = displayName != null && !displayName.isEmpty() ? displayName : participant.getEmail();
-        JLabel nameLabel = new JLabel(name);
-        nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        final String displayName = participant.getDisplayName();
+        final String name;
+        if (displayName != null && !displayName.isEmpty()) {
+            name = displayName;
+        } else {
+            name = participant.getEmail();
+        }
+        final JLabel nameLabel = new JLabel(name);
+        nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, LIST_ITEM_FONT_SIZE));
         itemPanel.add(nameLabel, BorderLayout.WEST);
         
         // Online indicator (small circle)
-        JPanel indicatorPanel = new JPanel();
-        indicatorPanel.setPreferredSize(new Dimension(10, 10));
+        final JPanel indicatorPanel = new JPanel();
+        indicatorPanel.setPreferredSize(new Dimension(ONLINE_INDICATOR_SIZE, ONLINE_INDICATOR_SIZE));
         indicatorPanel.setOpaque(true);
-        indicatorPanel.setBackground(new Color(76, 175, 80)); // Green for online
+        indicatorPanel.setBackground(new Color(GREEN_R, GREEN_G, GREEN_B)); // Green for online
         itemPanel.add(indicatorPanel, BorderLayout.EAST);
         
         return itemPanel;
@@ -144,8 +235,8 @@ public class ParticipantsView extends JPanel {
      * Applies the current theme to the component.
      */
     private void applyTheme() {
-        ThemeManager themeManager = ThemeManager.getInstance();
-        Theme theme = themeManager.getCurrentTheme();
+        final ThemeManager themeManager = ThemeManager.getInstance();
+        final Theme theme = themeManager.getCurrentTheme();
         
         setBackground(theme.getBackgroundColor());
         countLabel.setForeground(theme.getTextColor());

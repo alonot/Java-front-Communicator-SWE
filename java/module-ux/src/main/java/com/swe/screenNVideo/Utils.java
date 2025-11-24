@@ -1,6 +1,7 @@
 /**
  *  Contributed by Priyanshu Pandey.
  */
+
 package com.swe.screenNVideo;
 
 import java.awt.image.BufferedImage;
@@ -112,7 +113,7 @@ public class Utils {
     public static final int SEC_IN_MS = 1000;
     
     /**
-     * Milli-seconds in nanoseconds.
+     * MilliSeconds in nanoseconds.
      */
     public static final int MSEC_IN_NS = 1_000_000;
     
@@ -120,6 +121,11 @@ public class Utils {
      * Maximum tries to serialize the compressed packets.
      */
     public static final int MAX_TRIES_TO_SERIALIZE = 3;
+
+    /**
+     * DNS Server Port.
+     */
+    private static final int DNS_PORT = 10002;
 
     /**
      * Writes the given int to the buffer in little endian.
@@ -148,11 +154,14 @@ public class Utils {
         return matrix;
     }
 
-
+    /**
+     * Gets the local IP address of the machine.
+     * @return The string representation of the IP address.
+     */
     public static String getSelfIP() {
         // Get IP address as string
         try (DatagramSocket socket = new DatagramSocket()) {
-            socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
+            socket.connect(InetAddress.getByName("8.8.8.8"), DNS_PORT);
             return socket.getLocalAddress().getHostAddress();
         } catch (SocketException | UnknownHostException e) {
             throw new RuntimeException(e);
